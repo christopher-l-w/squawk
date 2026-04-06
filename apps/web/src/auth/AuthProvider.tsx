@@ -6,10 +6,12 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  deleteAccountRequest,
   fetchMe,
   loginRequest,
   logoutRequest,
   registerRequest,
+  updateProfileRequest,
 } from './authApi'
 import { AuthContext } from './authContext'
 import type { AuthContextValue } from './authTypes'
@@ -63,6 +65,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
+  const updateProfile = useCallback(async (displayName: string | null) => {
+    setError(null)
+    const u = await updateProfileRequest(displayName)
+    setUser(u)
+  }, [])
+
+  const deleteAccount = useCallback(async () => {
+    setError(null)
+    await deleteAccountRequest()
+    setUser(null)
+  }, [])
+
   const clearError = useCallback(() => setError(null), [])
 
   const value = useMemo<AuthContextValue>(
@@ -75,6 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       login,
       logout,
+      updateProfile,
+      deleteAccount,
       clearError,
     }),
     [
@@ -86,6 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       login,
       logout,
+      updateProfile,
+      deleteAccount,
       clearError,
     ],
   )

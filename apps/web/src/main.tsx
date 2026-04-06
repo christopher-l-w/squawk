@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import './index.css'
 import App from './App.tsx'
+import { AccountPage } from './pages/AccountPage.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/account" element={<AccountPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

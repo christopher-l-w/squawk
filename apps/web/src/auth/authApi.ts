@@ -78,3 +78,35 @@ export async function logoutRequest(): Promise<void> {
     credentials: 'include',
   })
 }
+
+export async function updateProfileRequest(
+  displayName: string | null,
+): Promise<AuthUser> {
+  const base = getApiBaseUrl()
+  if (!base) throw new Error('VITE_API_URL is not configured')
+
+  const res = await fetch(`${base}/auth/me`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ displayName }),
+  })
+  if (!res.ok) {
+    throw new Error(await parseError(res))
+  }
+  const data = (await res.json()) as { user: AuthUser }
+  return data.user
+}
+
+export async function deleteAccountRequest(): Promise<void> {
+  const base = getApiBaseUrl()
+  if (!base) throw new Error('VITE_API_URL is not configured')
+
+  const res = await fetch(`${base}/auth/me`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(await parseError(res))
+  }
+}

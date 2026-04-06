@@ -1,9 +1,10 @@
 import type { MiddlewareHandler } from 'hono'
+import type { AuthUser } from '../auth/sessionService.js'
 import { getSessionUser } from '../auth/sessionService.js'
 
 export type AuthedEnv = {
   Variables: {
-    user: { id: string; email: string }
+    user: AuthUser
   }
 }
 

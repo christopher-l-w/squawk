@@ -121,6 +121,11 @@
   justify-content: center;
 }
 
+.auth-account {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
 .login-page {
   display: flex;
   flex-direction: column;
@@ -234,6 +239,58 @@
 .login-page__submit {
   width: 100%;
   margin-top: 0.35rem;
+}
+
+.account-page {
+  max-width: 24rem;
+}
+
+.account-page__form {
+  margin-top: 0.5rem;
+}
+
+.account-page__fields {
+  gap: 0.35rem;
+}
+
+.account-page__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0;
+}
+
+.account-page__danger {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.account-page__danger-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.account-page__danger-text {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.account-page__delete-btn {
+  border: 1px solid rgba(200, 60, 60, 0.45);
+  background: rgba(200, 60, 60, 0.1);
+  color: #c53030;
+}
+
+.account-page__delete-btn:hover:not(:disabled) {
+  background: rgba(200, 60, 60, 0.18);
+}
+
+.account-page__delete-confirm {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .copy-hint {

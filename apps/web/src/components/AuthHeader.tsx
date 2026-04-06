@@ -28,6 +28,9 @@ export function AuthHeader() {
         <span className="auth-email" title={user.email}>
           {label}
         </span>
+        <Link to="/account" className="btn btn--ghost auth-account">
+          Account
+        </Link>
         <button
           type="button"
           className="btn btn--ghost"

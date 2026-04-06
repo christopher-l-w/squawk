@@ -12,10 +12,16 @@ import { hashPassword, verifyPassword } from '../auth/password.js'
 import { getSessionUser } from '../auth/sessionService.js'
 import { getDb } from '../db/client.js'
 import { users } from '../db/schema.js'
+import { requireAuth } from '../middleware/requireAuth.js'
+import { parseJson } from './jsonBody.js'
 
 const credentialsSchema = z.object({
   email: z.string().min(1).max(255).email(),
   password: z.string().min(8).max(256),
+})
+
+const patchMeSchema = z.object({
+  displayName: z.union([z.string().max(255), z.null()]).optional(),
 })
 
 type Credentials = z.infer<typeof credentialsSchema>
@@ -163,6 +169,55 @@ export function createAuthRoutes() {
       return c.json({ error: 'Unauthorized' }, 401)
     }
     return c.json({ user })
+  })
+
+  r.patch('/me', requireAuth, async (c) => {
+    const authUser = c.get('user')
+    const parsed = await parseJson(c, patchMeSchema)
+    if (!parsed.ok) return parsed.response
+    if (parsed.data.displayName === undefined) {
+      return c.json({ user: authUser })
+    }
+    const raw = parsed.data.displayName
+    const normalized =
+      raw === null
+        ? null
+        : raw.trim() === ''
+          ? null
+          : raw.trim()
+    const db = getDb()
+    const updated = await db
+      .update(users)
+      .set({ displayName: normalized })
+      .where(eq(users.id, authUser.id))
+      .returning({
+        id: users.id,
+        email: users.email,
+        displayName: users.displayName,
+      })
+    const row = updated[0]
+    if (!row) {
+      return c.json({ error: 'Update failed' }, 500)
+    }
+    return c.json({
+      user: {
+        id: row.id,
+        email: row.email,
+        displayName: row.displayName ?? null,
+      },
+    })
+  })
+
+  r.delete('/me', requireAuth, async (c) => {
+    const authUser = c.get('user')
+    const raw = getCookie(c, SESSION_COOKIE_NAME)
+    if (raw) {
+      await deleteSessionByRawToken(raw)
+    }
+    const db = getDb()
+    await db.delete(users).where(eq(users.id, authUser.id))
+    deleteCookie(c, SESSION_COOKIE_NAME, { path: '/' })
+    return c.json({ ok: true })
   })
 
   return r

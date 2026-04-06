@@ -45,6 +45,44 @@ describeAuth('auth HTTP routes', () => {
     expect(after.status).toBe(401)
   })
 
+  it('PATCH /auth/me updates display name; DELETE /auth/me removes user', async () => {
+    const email = `profile-${Date.now()}@example.com`
+    const password = 'password12345'
+
+    const reg = await app.request('http://localhost/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    expect(reg.status).toBe(201)
+    const cookieHeader = cookiePairFromSetCookie(reg.headers.get('set-cookie'))
+
+    const patch = await app.request('http://localhost/auth/me', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookieHeader,
+      },
+      body: JSON.stringify({ displayName: '  Pat Example  ' }),
+    })
+    expect(patch.status).toBe(200)
+    const patchBody = (await patch.json()) as {
+      user: { displayName: string | null }
+    }
+    expect(patchBody.user.displayName).toBe('Pat Example')
+
+    const del = await app.request('http://localhost/auth/me', {
+      method: 'DELETE',
+      headers: { Cookie: cookieHeader },
+    })
+    expect(del.status).toBe(200)
+
+    const gone = await app.request('http://localhost/auth/me', {
+      headers: { Cookie: cookieHeader },
+    })
+    expect(gone.status).toBe(401)
+  })
+
   it('login with existing user', async () => {
     const email = `login-${Date.now()}@example.com`
     const password = 'password12345'
