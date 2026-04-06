@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -e
+npm run format
+git add -u
+npm run lint
+npm run test
+npm run build

@@ -180,11 +180,7 @@ export function createAuthRoutes() {
     }
     const raw = parsed.data.displayName
     const normalized =
-      raw === null
-        ? null
-        : raw.trim() === ''
-          ? null
-          : raw.trim()
+      raw === null ? null : raw.trim() === '' ? null : raw.trim()
     const db = getDb()
     const updated = await db
       .update(users)

@@ -150,7 +150,10 @@ export function AccountPage() {
           ) : null}
         </form>
 
-        <section className="account-page__danger" aria-labelledby="danger-heading">
+        <section
+          className="account-page__danger"
+          aria-labelledby="danger-heading"
+        >
           <h2 id="danger-heading" className="account-page__danger-title">
             Delete account
           </h2>
