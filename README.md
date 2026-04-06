@@ -19,7 +19,7 @@ npm run db:migrate
 
 The default `DATABASE_URL` in `.env.example` matches the Compose service (`squawk` / `squawk` / database `squawk` on port `5432`).
 
-**Auth + CORS:** Keep `WEB_ORIGIN` in the root `.env` aligned with the Vite dev origin (`http://localhost:5173`). Set `VITE_API_URL` in `apps/web/.env` to your API base URL (e.g. `http://localhost:3001`).
+**Auth + CORS:** Keep `WEB_ORIGIN` in the root `.env` aligned with the Vite dev origin (`http://localhost:5173`). Set `VITE_API_URL` in `apps/web/.env` to your API base URL including the **`/v1` prefix** (e.g. `http://localhost:3001/v1`).
 
 **OAuth (optional):** Uncomment and set `GOOGLE_*` in the root `.env` (see [`.env.example`](.env.example)) and register the redirect URI in Google Cloud. Run `npm run db:migrate` so the `oauth_accounts` table exists.
 
@@ -73,7 +73,7 @@ docker run --rm -p 3001:3001 \
   squawk-api
 ```
 
-Set `PORT` if the platform injects one. Optional Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (must match your API’s public URL and Google Cloud redirect URIs).
+Set `PORT` if the platform injects one. Optional Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (must match **`…/v1/auth/oauth/google/callback`** and Google Cloud redirect URIs).
 
 Check `GET /health` (liveness) and `GET /ready` (returns **503** if the DB is unreachable).
 
@@ -82,7 +82,7 @@ Check `GET /health` (liveness) and `GET /ready` (returns **503** if the DB is un
 `VITE_API_URL` is **baked in at build time**. Set it in CI or locally to your **public API base URL** (no trailing slash), then build:
 
 ```bash
-cd apps/web && VITE_API_URL="https://api.yourdomain.com" npm run build
+cd apps/web && VITE_API_URL="https://api.yourdomain.com/v1" npm run build
 ```
 
 Upload `apps/web/dist` to Netlify, Vercel, S3+CloudFront, etc. Configure the host to **serve `index.html` for unknown paths** (SPA fallback) so `/login` works on refresh.
@@ -93,7 +93,7 @@ Upload `apps/web/dist` to Netlify, Vercel, S3+CloudFront, etc. Configure the hos
 | `NODE_ENV` | API | Use `production` for secure cookies |
 | `PORT` | API | Listen port (default `3001`) |
 | `WEB_ORIGIN` | API | Exact browser origin allowed by CORS (your deployed SPA URL) |
-| `VITE_API_URL` | Web **build** | Public API URL the SPA calls |
+| `VITE_API_URL` | Web **build** | Public API base URL the SPA calls, including **`/v1`** (no trailing slash after `v1`) |
 | `GOOGLE_*` | API | Optional; see below |
 
 ## Project layout
@@ -106,13 +106,15 @@ Upload `apps/web/dist` to Netlify, Vercel, S3+CloudFront, etc. Configure the hos
 
 ### API endpoints
 
+Versioned routes live under **`/v1`**. **`GET /health`** and **`GET /ready`** are at the **host root** (for load balancer probes).
+
 - `GET /health` — process liveness
 - `GET /ready` — readiness; returns **503** if `DATABASE_URL` is missing or the DB is unreachable
-- `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` — session cookie auth (`squawk_session` httpOnly cookie)
-- `GET /auth/oauth/providers` — JSON `{ google: boolean }` (whether Google OAuth env vars are set)
-- `GET /auth/oauth/google` → Google consent, then `GET /auth/oauth/google/callback` — Sign in with Google
-- `GET /saved-requests`, `POST /saved-requests`, `PATCH /saved-requests/:id`, `DELETE /saved-requests/:id` — named saved HTTP requests (requires session)
-- `GET /history?limit=…`, `POST /history` — append and list recent request snapshots for the signed-in user (requires session)
+- `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/logout`, `GET /v1/auth/me` — session cookie auth (`squawk_session` httpOnly cookie)
+- `GET /v1/auth/oauth/providers` — JSON `{ google: boolean }` (whether Google OAuth env vars are set)
+- `GET /v1/auth/oauth/google` → Google consent, then `GET /v1/auth/oauth/google/callback` — Sign in with Google
+- `GET /v1/saved-requests`, `POST /v1/saved-requests`, `PATCH /v1/saved-requests/:id`, `DELETE /v1/saved-requests/:id` — named saved HTTP requests (requires session)
+- `GET /v1/history?limit=…`, `POST /v1/history` — append and list recent request snapshots for the signed-in user (requires session)
 
 After pulling schema changes, run `npm run db:migrate` (e.g. `request_history` snapshot columns, `oauth_accounts` for social login).
 
@@ -122,7 +124,7 @@ The HTTP client UI still sends `fetch` to **whatever URL you type**; it does not
 
 Before pointing real users at a deployed Squawk:
 
-1. **Google Cloud OAuth client** — Add your **production** API base URL to **Authorized redirect URIs**, e.g. `https://api.yourdomain.com/auth/oauth/google/callback`, and set **`GOOGLE_REDIRECT_URI`** in the API environment to that exact URL. Use **HTTPS** for the live API; align **`WEB_ORIGIN`** and **`VITE_API_URL`** with your real web and API URLs.
+1. **Google Cloud OAuth client** — Add your **production** redirect URI under **`/v1`**, e.g. `https://api.yourdomain.com/v1/auth/oauth/google/callback`, and set **`GOOGLE_REDIRECT_URI`** in the API environment to that exact URL. Use **HTTPS** for the live API; align **`WEB_ORIGIN`** and **`VITE_API_URL`** (including `/v1`) with your real web and API URLs.
 2. **OAuth consent screen** — In [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **OAuth consent screen**, move from **Testing** to **In production** when you are ready for users outside any test-user list.
 3. **Verification** — If your app uses restricted or sensitive scopes, or you need broad public sign-in, Google may require **[app verification](https://support.google.com/cloud/answer/9110914)** (privacy policy, branding, review). Plan time for that before launch; internal/testing-only usage can stay in **Testing** with explicit test users.
 

@@ -31,10 +31,12 @@ export function createApp() {
     return c.json({ status: 'ready', database: 'up' })
   })
 
-  app.route('/auth', createAuthRoutes())
-  app.route('/auth/oauth', createOAuthRoutes())
-  app.route('/saved-requests', createSavedRequestsRoutes())
-  app.route('/history', createHistoryRoutes())
+  const v1 = new Hono()
+  v1.route('/auth', createAuthRoutes())
+  v1.route('/auth/oauth', createOAuthRoutes())
+  v1.route('/saved-requests', createSavedRequestsRoutes())
+  v1.route('/history', createHistoryRoutes())
+  app.route('/v1', v1)
 
   return app
 }

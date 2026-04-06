@@ -9,4 +9,10 @@ describe('createApp', () => {
     const body = (await res.json()) as { status: string }
     expect(body.status).toBe('ok')
   })
+
+  it('GET /v1/auth/me returns 401 without session', async () => {
+    const app = createApp()
+    const res = await app.request('http://localhost/v1/auth/me')
+    expect(res.status).toBe(401)
+  })
 })

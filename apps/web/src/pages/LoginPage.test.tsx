@@ -6,7 +6,7 @@ import { AuthProvider } from '../auth/AuthProvider'
 import { LoginPage } from './LoginPage'
 
 vi.mock('../auth/config', () => ({
-  getApiBaseUrl: () => 'http://localhost:3001',
+  getApiBaseUrl: () => 'http://localhost:3001/v1',
 }))
 
 describe('LoginPage', () => {

@@ -16,7 +16,7 @@ describeAuth('auth HTTP routes', () => {
     const email = `user-${Date.now()}@example.com`
     const password = 'password12345'
 
-    const reg = await app.request('http://localhost/auth/register', {
+    const reg = await app.request('http://localhost/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -26,20 +26,20 @@ describeAuth('auth HTTP routes', () => {
     expect(setCookie).toContain('squawk_session')
     const cookieHeader = cookiePairFromSetCookie(setCookie)
 
-    const me = await app.request('http://localhost/auth/me', {
+    const me = await app.request('http://localhost/v1/auth/me', {
       headers: { Cookie: cookieHeader },
     })
     expect(me.status).toBe(200)
     const meBody = (await me.json()) as { user: { email: string } }
     expect(meBody.user.email).toBe(email.trim().toLowerCase())
 
-    const out = await app.request('http://localhost/auth/logout', {
+    const out = await app.request('http://localhost/v1/auth/logout', {
       method: 'POST',
       headers: { Cookie: cookieHeader },
     })
     expect(out.status).toBe(200)
 
-    const after = await app.request('http://localhost/auth/me', {
+    const after = await app.request('http://localhost/v1/auth/me', {
       headers: { Cookie: cookieHeader },
     })
     expect(after.status).toBe(401)
@@ -49,7 +49,7 @@ describeAuth('auth HTTP routes', () => {
     const email = `profile-${Date.now()}@example.com`
     const password = 'password12345'
 
-    const reg = await app.request('http://localhost/auth/register', {
+    const reg = await app.request('http://localhost/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -57,7 +57,7 @@ describeAuth('auth HTTP routes', () => {
     expect(reg.status).toBe(201)
     const cookieHeader = cookiePairFromSetCookie(reg.headers.get('set-cookie'))
 
-    const patch = await app.request('http://localhost/auth/me', {
+    const patch = await app.request('http://localhost/v1/auth/me', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -71,13 +71,13 @@ describeAuth('auth HTTP routes', () => {
     }
     expect(patchBody.user.displayName).toBe('Pat Example')
 
-    const del = await app.request('http://localhost/auth/me', {
+    const del = await app.request('http://localhost/v1/auth/me', {
       method: 'DELETE',
       headers: { Cookie: cookieHeader },
     })
     expect(del.status).toBe(200)
 
-    const gone = await app.request('http://localhost/auth/me', {
+    const gone = await app.request('http://localhost/v1/auth/me', {
       headers: { Cookie: cookieHeader },
     })
     expect(gone.status).toBe(401)
@@ -87,13 +87,13 @@ describeAuth('auth HTTP routes', () => {
     const email = `login-${Date.now()}@example.com`
     const password = 'password12345'
 
-    await app.request('http://localhost/auth/register', {
+    await app.request('http://localhost/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     })
 
-    const login = await app.request('http://localhost/auth/login', {
+    const login = await app.request('http://localhost/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -102,7 +102,7 @@ describeAuth('auth HTTP routes', () => {
     const setCookie = login.headers.get('set-cookie')
     const cookieHeader = cookiePairFromSetCookie(setCookie)
 
-    const me = await app.request('http://localhost/auth/me', {
+    const me = await app.request('http://localhost/v1/auth/me', {
       headers: { Cookie: cookieHeader },
     })
     expect(me.status).toBe(200)
@@ -112,10 +112,10 @@ describeAuth('auth HTTP routes', () => {
     const email = `library-${Date.now()}@example.com`
     const password = 'password12345'
 
-    const unauth = await app.request('http://localhost/saved-requests')
+    const unauth = await app.request('http://localhost/v1/saved-requests')
     expect(unauth.status).toBe(401)
 
-    const reg = await app.request('http://localhost/auth/register', {
+    const reg = await app.request('http://localhost/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -123,7 +123,7 @@ describeAuth('auth HTTP routes', () => {
     expect(reg.status).toBe(201)
     const cookieHeader = cookiePairFromSetCookie(reg.headers.get('set-cookie'))
 
-    const created = await app.request('http://localhost/saved-requests', {
+    const created = await app.request('http://localhost/v1/saved-requests', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ describeAuth('auth HTTP routes', () => {
     }
     expect(createdJson.item.name).toBe('Example')
 
-    const listSaved = await app.request('http://localhost/saved-requests', {
+    const listSaved = await app.request('http://localhost/v1/saved-requests', {
       headers: { Cookie: cookieHeader },
     })
     expect(listSaved.status).toBe(200)
@@ -154,7 +154,7 @@ describeAuth('auth HTTP routes', () => {
       true,
     )
 
-    const histPost = await app.request('http://localhost/history', {
+    const histPost = await app.request('http://localhost/v1/history', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -172,7 +172,7 @@ describeAuth('auth HTTP routes', () => {
     })
     expect(histPost.status).toBe(201)
 
-    const listHist = await app.request('http://localhost/history?limit=10', {
+    const listHist = await app.request('http://localhost/v1/history?limit=10', {
       headers: { Cookie: cookieHeader },
     })
     expect(listHist.status).toBe(200)
@@ -180,7 +180,7 @@ describeAuth('auth HTTP routes', () => {
     expect(listHistJson.items[0]?.url).toBe('https://api.example.com/x')
 
     const del = await app.request(
-      `http://localhost/saved-requests/${createdJson.item.id}`,
+      `http://localhost/v1/saved-requests/${createdJson.item.id}`,
       { method: 'DELETE', headers: { Cookie: cookieHeader } },
     )
     expect(del.status).toBe(200)
