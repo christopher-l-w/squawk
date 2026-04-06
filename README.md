@@ -28,6 +28,8 @@ npm run dev:api
 npm run dev:web
 ```
 
+The web app is a SPA with client-side routing: **`/`** is the HTTP client, **`/login`** is the sign-in / register page. For production, configure your static host to **fallback to `index.html`** for unknown paths so deep links like `/login` load the app (the Vite dev server does this automatically).
+
 ## Scripts (repo root)
 
 | Script | Description |
@@ -45,7 +47,7 @@ npm run dev:web
 
 ## Project layout
 
-- [`apps/web`](apps/web) — Vite + React + TypeScript SPA
+- [`apps/web`](apps/web) — Vite + React + TypeScript SPA (`react-router-dom`: `/`, `/login`)
 - [`apps/api`](apps/api) — Hono HTTP server, Drizzle ORM, `pg` driver
 - [`apps/api/src/db`](apps/api/src/db) — Schema and DB client
 - [`apps/api/drizzle`](apps/api/drizzle) — Generated SQL migrations

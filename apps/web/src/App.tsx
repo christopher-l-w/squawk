@@ -9,7 +9,7 @@ import {
   type SavedRequestRow,
 } from './api/squawkData'
 import { useAuth } from './auth/useAuth'
-import { AuthPanel } from './components/AuthPanel'
+import { AuthHeader } from './components/AuthHeader'
 import { LibraryPanel } from './components/LibraryPanel'
 import { RequestPanel } from './components/RequestPanel'
 import { ResponsePanel } from './components/ResponsePanel'
@@ -110,7 +110,7 @@ export default function App() {
           <p className="app__tagline">HTTP from the browser</p>
         </div>
         <div className="app__header-actions">
-          <AuthPanel />
+          <AuthHeader />
           <button
             type="button"
             className="btn btn--ghost"

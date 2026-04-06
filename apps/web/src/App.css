@@ -114,6 +114,75 @@
   white-space: nowrap;
 }
 
+.auth-sign-in {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: min(70vh, 36rem);
+  padding: 1rem 0 2rem;
+}
+
+.login-page__card {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.login-page__back {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+
+.login-page__back:hover {
+  color: var(--accent);
+}
+
+.login-page__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.login-page__subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.login-page__loading {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.login-page__form {
+  min-width: 0;
+}
+
+.login-page__fields {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.login-page .login-page__fields .auth-input {
+  flex: none;
+  width: 100%;
+}
+
+.login-page__submit {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
 .copy-hint {
   margin: 0;
   font-size: 0.9rem;

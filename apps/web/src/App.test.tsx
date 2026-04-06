@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from './auth/AuthProvider'
 import App from './App'
@@ -18,9 +19,11 @@ describe('App', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(
-      <AuthProvider>
-        <App />
-      </AuthProvider>,
+      <MemoryRouter initialEntries={['/']}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </MemoryRouter>,
     )
 
     await user.clear(screen.getByPlaceholderText(/api\.example\.com/))
