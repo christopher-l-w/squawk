@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from '../auth/config'
 import type { HttpExecutionResult, HttpRequestFields } from '../lib/http'
+import { filterPersistableHeaders } from '../lib/redactRequestHeaders'
 
 async function apiFetch(
   path: string,
@@ -26,6 +27,7 @@ export type SavedRequestRow = {
   name: string
   method: string
   url: string
+  /** Allowlisted header names only; secrets never stored. */
   headers: { name: string; value: string }[]
   body: string
   createdAt: string
@@ -63,7 +65,10 @@ export async function createSavedRequest(
       name,
       method: fields.method,
       url: fields.url,
-      headers: fields.headers,
+      headers: fields.headers.map((h) => ({
+        name: h.name,
+        value: h.value ?? '',
+      })),
       body: fields.body,
     }),
   })
@@ -105,7 +110,10 @@ export function buildHistoryPayload(
   const base = {
     method: fields.method,
     url: fields.url,
-    headers: fields.headers.map((h) => ({ ...h })),
+    headers: filterPersistableHeaders(fields.headers).map((h) => ({
+      name: h.name,
+      value: h.value ?? '',
+    })),
     body: fields.body,
   }
   if (result.ok) {

@@ -67,6 +67,7 @@ export const savedRequests = pgTable('saved_requests', {
   name: varchar('name', { length: 255 }).notNull(),
   method: varchar('method', { length: 16 }).notNull(),
   url: text('url').notNull(),
+  /** Only allowlisted header names are persisted (see filterPersistableHeaders). */
   headers: jsonb('headers')
     .$type<{ name: string; value: string }[]>()
     .notNull()

@@ -23,7 +23,7 @@ export function SavedRequestsPanel({
     onApplyRequest({
       method,
       url: row.url,
-      headers: row.headers,
+      headers: row.headers.map((h) => ({ ...h })),
       body: row.body,
     })
   }
@@ -32,6 +32,8 @@ export function SavedRequestsPanel({
     <CollapsibleSection title="Saved requests" className="saved-requests-panel">
       <p className="saved-requests-intro muted">
         Load a saved request into the editor or remove it from your account.
+        Only a small allowlist of headers is stored (e.g. Accept, Content-Type);
+        add authentication and other sensitive headers after loading.
       </p>
       {items.length === 0 ? (
         <p className="muted saved-requests-empty">No saved requests yet.</p>

@@ -447,6 +447,131 @@
   }
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.modal-dialog {
+  width: 100%;
+  max-width: min(42rem, calc(100vw - 2rem));
+  max-height: min(90vh, 38rem);
+  overflow-y: auto;
+  margin: 0;
+}
+
+.modal-dialog__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.modal-dialog__lede {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.modal-dialog__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin: 0 0 1rem;
+  min-height: 0;
+}
+
+@media (max-width: 540px) {
+  .modal-dialog__split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-dialog__pane {
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-dialog__pane--allow {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+}
+
+.modal-dialog__pane--block {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+}
+
+.modal-dialog__pane-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.modal-dialog__chip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-content: flex-start;
+  overflow-y: auto;
+  max-height: 11rem;
+}
+
+.modal-dialog__chip-list--block {
+  max-height: 8rem;
+}
+
+.modal-dialog__chip {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  line-height: 1.25;
+}
+
+.modal-dialog__chip--allow {
+  background: var(--surface);
+  border: 1px solid var(--accent-border);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.modal-dialog__chip--block {
+  background: var(--surface);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}
+
+.modal-dialog__hint {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.modal-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);

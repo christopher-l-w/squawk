@@ -5,8 +5,12 @@ import { getDb } from '../db/client.js'
 import { requestHistory } from '../db/schema.js'
 import { requireAuth, type AuthedEnv } from '../middleware/requireAuth.js'
 import { parseJson } from './jsonBody.js'
+import { filterPersistableHeaders } from '../security/redactRequestHeaders.js'
 
-const headerRow = z.object({ name: z.string(), value: z.string() })
+const headerRow = z.object({
+  name: z.string(),
+  value: z.string().default(''),
+})
 
 const createHistorySchema = z.object({
   method: z.string().min(1).max(16),
@@ -43,13 +47,15 @@ export function createHistoryRoutes() {
     const parsed = await parseJson(c, createHistorySchema)
     if (!parsed.ok) return parsed.response
 
+    const safeHeaders = filterPersistableHeaders(parsed.data.headers)
+
     const inserted = await getDb()
       .insert(requestHistory)
       .values({
         userId,
         method: parsed.data.method,
         url: parsed.data.url,
-        requestHeaders: parsed.data.headers,
+        requestHeaders: safeHeaders,
         requestBody: parsed.data.body,
         statusCode: parsed.data.statusCode ?? null,
         durationMs: parsed.data.durationMs ?? null,

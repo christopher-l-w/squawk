@@ -4,9 +4,14 @@ import { z } from 'zod'
 import { getDb } from '../db/client.js'
 import { savedRequests } from '../db/schema.js'
 import { requireAuth, type AuthedEnv } from '../middleware/requireAuth.js'
+import { filterPersistableHeaders } from '../security/redactRequestHeaders.js'
 import { parseJson } from './jsonBody.js'
 
-const headerRow = z.object({ name: z.string(), value: z.string() })
+/** JSON may omit `value` when undefined was stringified away from the client. */
+const headerRow = z.object({
+  name: z.string(),
+  value: z.string().default(''),
+})
 
 const createSavedSchema = z.object({
   name: z.string().min(1).max(255),
@@ -48,6 +53,8 @@ export function createSavedRequestsRoutes() {
     const parsed = await parseJson(c, createSavedSchema)
     if (!parsed.ok) return parsed.response
 
+    const safeHeaders = filterPersistableHeaders(parsed.data.headers)
+
     const inserted = await getDb()
       .insert(savedRequests)
       .values({
@@ -55,7 +62,7 @@ export function createSavedRequestsRoutes() {
         name: parsed.data.name,
         method: parsed.data.method,
         url: parsed.data.url,
-        headers: parsed.data.headers,
+        headers: safeHeaders,
         body: parsed.data.body,
       })
       .returning()
@@ -82,7 +89,9 @@ export function createSavedRequestsRoutes() {
         ...(p.name !== undefined ? { name: p.name } : {}),
         ...(p.method !== undefined ? { method: p.method } : {}),
         ...(p.url !== undefined ? { url: p.url } : {}),
-        ...(p.headers !== undefined ? { headers: p.headers } : {}),
+        ...(p.headers !== undefined
+          ? { headers: filterPersistableHeaders(p.headers) }
+          : {}),
         ...(p.body !== undefined ? { body: p.body } : {}),
         updatedAt: new Date(),
       })
