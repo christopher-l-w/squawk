@@ -25,14 +25,14 @@ Run the UI and API in two terminals:
 
 ```bash
 npm run dev:api
-npm run dev
+npm run dev:web
 ```
 
 ## Scripts (repo root)
 
 | Script | Description |
 | --- | --- |
-| `npm run dev` | Vite dev server (`apps/web`) |
+| `npm run dev:web` | Vite dev server (`apps/web`) |
 | `npm run dev:api` | API dev server (`apps/api`, default port **3001**) |
 | `npm run build` | Production build: web + API |
 | `npm test` | Vitest: web + API |
