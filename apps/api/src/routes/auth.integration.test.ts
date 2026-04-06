@@ -69,4 +69,82 @@ describeAuth('auth HTTP routes', () => {
     })
     expect(me.status).toBe(200)
   })
+
+  it('saved requests and history require auth; CRUD works with session', async () => {
+    const email = `library-${Date.now()}@example.com`
+    const password = 'password12345'
+
+    const unauth = await app.request('http://localhost/saved-requests')
+    expect(unauth.status).toBe(401)
+
+    const reg = await app.request('http://localhost/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    expect(reg.status).toBe(201)
+    const cookieHeader = cookiePairFromSetCookie(reg.headers.get('set-cookie'))
+
+    const created = await app.request('http://localhost/saved-requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookieHeader,
+      },
+      body: JSON.stringify({
+        name: 'Example',
+        method: 'GET',
+        url: 'https://example.com/path',
+        headers: [{ name: 'Accept', value: 'application/json' }],
+        body: '',
+      }),
+    })
+    expect(created.status).toBe(201)
+    const createdJson = (await created.json()) as {
+      item: { id: string; name: string; url: string }
+    }
+    expect(createdJson.item.name).toBe('Example')
+
+    const listSaved = await app.request('http://localhost/saved-requests', {
+      headers: { Cookie: cookieHeader },
+    })
+    expect(listSaved.status).toBe(200)
+    const listSavedJson = (await listSaved.json()) as {
+      items: { id: string }[]
+    }
+    expect(
+      listSavedJson.items.some((r) => r.id === createdJson.item.id),
+    ).toBe(true)
+
+    const histPost = await app.request('http://localhost/history', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookieHeader,
+      },
+      body: JSON.stringify({
+        method: 'POST',
+        url: 'https://api.example.com/x',
+        headers: [],
+        body: '{}',
+        statusCode: 201,
+        durationMs: 42,
+        errorMessage: null,
+      }),
+    })
+    expect(histPost.status).toBe(201)
+
+    const listHist = await app.request('http://localhost/history?limit=10', {
+      headers: { Cookie: cookieHeader },
+    })
+    expect(listHist.status).toBe(200)
+    const listHistJson = (await listHist.json()) as { items: { url: string }[] }
+    expect(listHistJson.items[0]?.url).toBe('https://api.example.com/x')
+
+    const del = await app.request(
+      `http://localhost/saved-requests/${createdJson.item.id}`,
+      { method: 'DELETE', headers: { Cookie: cookieHeader } },
+    )
+    expect(del.status).toBe(200)
+  })
 })

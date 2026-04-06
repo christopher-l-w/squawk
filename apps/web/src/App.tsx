@@ -1,13 +1,79 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  appendHistoryEntry,
+  createSavedRequest,
+  deleteSavedRequest,
+  listHistory,
+  listSavedRequests,
+  type HistoryRow,
+  type SavedRequestRow,
+} from './api/squawkData'
+import { useAuth } from './auth/useAuth'
 import { AuthPanel } from './components/AuthPanel'
+import { LibraryPanel } from './components/LibraryPanel'
 import { RequestPanel } from './components/RequestPanel'
 import { ResponsePanel } from './components/ResponsePanel'
 import { useHttpRequest } from './hooks/useHttpRequest'
 import { requestFieldsToCurl } from './lib/http'
 import './App.css'
 
+async function fetchLibraryLists(): Promise<{
+  saved: SavedRequestRow[]
+  history: HistoryRow[]
+}> {
+  const [saved, history] = await Promise.all([
+    listSavedRequests(),
+    listHistory(40),
+  ])
+  return { saved, history }
+}
+
 export default function App() {
-  const http = useHttpRequest()
+  const { user } = useAuth()
+  const [saved, setSaved] = useState<SavedRequestRow[]>([])
+  const [history, setHistory] = useState<HistoryRow[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const { saved: s, history: h } = await fetchLibraryLists()
+        if (!cancelled) {
+          setSaved(s)
+          setHistory(h)
+        }
+      } catch {
+        if (!cancelled) {
+          setSaved([])
+          setHistory([])
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+
+  const loadLibrary = useCallback(async () => {
+    if (!user) return
+    try {
+      const { saved: s, history: h } = await fetchLibraryLists()
+      setSaved(s)
+      setHistory(h)
+    } catch {
+      setSaved([])
+      setHistory([])
+    }
+  }, [user])
+
+  const http = useHttpRequest({
+    onSendComplete: ({ fields, result }) => {
+      if (!user) return
+      void appendHistoryEntry(fields, result).then(() => loadLibrary())
+    },
+  })
+
   const [copyHint, setCopyHint] = useState<string | null>(null)
 
   const handleSend = () => {
@@ -24,6 +90,16 @@ export default function App() {
       setCopyHint('Could not copy (clipboard permission).')
       window.setTimeout(() => setCopyHint(null), 3500)
     }
+  }
+
+  const handleSave = async (name: string) => {
+    await createSavedRequest(name, http.fields)
+    await loadLibrary()
+  }
+
+  const handleDeleteSaved = async (id: string) => {
+    await deleteSavedRequest(id)
+    await loadLibrary()
   }
 
   return (
@@ -48,6 +124,15 @@ export default function App() {
         <p className="copy-hint" role="status" aria-live="polite">
           {copyHint}
         </p>
+      ) : null}
+      {user ? (
+        <LibraryPanel
+          saved={saved}
+          history={history}
+          onApplyRequest={http.applyFields}
+          onSave={handleSave}
+          onDeleteSaved={handleDeleteSaved}
+        />
       ) : null}
       <main className="app__main">
         <RequestPanel http={http} onSend={handleSend} />

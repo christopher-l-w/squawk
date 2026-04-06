@@ -56,10 +56,13 @@ npm run dev
 - `GET /health` — process liveness
 - `GET /ready` — readiness; returns **503** if `DATABASE_URL` is missing or the DB is unreachable
 - `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` — session cookie auth (`squawk_session` httpOnly cookie)
+- `GET /saved-requests`, `POST /saved-requests`, `PATCH /saved-requests/:id`, `DELETE /saved-requests/:id` — named saved HTTP requests (requires session)
+- `GET /history?limit=…`, `POST /history` — append and list recent request snapshots for the signed-in user (requires session)
+
+After pulling schema changes, run `npm run db:migrate` so new columns (e.g. request snapshot fields on `request_history`) exist.
 
 The HTTP client UI still sends `fetch` to **whatever URL you type**; it does not proxy through the API. Third-party APIs may still hit **CORS** limits until a same-origin proxy exists.
 
 ## Roadmap
 
-- CRUD for saved requests and history (tables already in [`schema.ts`](apps/api/src/db/schema.ts))
 - Optional API proxy route to reduce CORS issues for saved flows

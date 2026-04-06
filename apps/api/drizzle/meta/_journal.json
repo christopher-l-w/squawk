@@ -15,6 +15,13 @@
       "when": 1775250933443,
       "tag": "0001_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775251749121,
+      "tag": "0002_history_request_snapshot",
+      "breakpoints": true
     }
   ]
 }

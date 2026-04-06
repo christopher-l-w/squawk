@@ -62,8 +62,15 @@ export const requestHistory = pgTable('request_history', {
     .notNull(),
   method: varchar('method', { length: 16 }).notNull(),
   url: text('url').notNull(),
+  requestHeaders: jsonb('request_headers')
+    .$type<{ name: string; value: string }[]>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+  requestBody: text('request_body').notNull().default(''),
   statusCode: integer('status_code'),
   durationMs: integer('duration_ms'),
+  /** Set when the browser could not complete a response (e.g. CORS, network). */
+  errorMessage: text('error_message'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),

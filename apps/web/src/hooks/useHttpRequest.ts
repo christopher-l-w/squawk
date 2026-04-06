@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   executeHttpRequest,
   type HttpExecutionResult,
@@ -10,10 +16,21 @@ const defaultHeaderRows = (): { name: string; value: string }[] => [
   { name: '', value: '' },
 ]
 
+export type UseHttpRequestOptions = {
+  /** Called after each completed send (success or error). */
+  onSendComplete?: (args: {
+    fields: HttpRequestFields
+    result: HttpExecutionResult
+  }) => void
+}
+
 /**
  * In-memory request/response state for the main HTTP client screen.
  */
-export function useHttpRequest() {
+export function useHttpRequest(options?: UseHttpRequestOptions) {
+  const onSendCompleteRef = useRef(options?.onSendComplete)
+  onSendCompleteRef.current = options?.onSendComplete
+
   const [method, setMethod] = useState<HttpMethod>('GET')
   const [url, setUrl] = useState('')
   const [headerRows, setHeaderRows] = useState(defaultHeaderRows)
@@ -38,6 +55,21 @@ export function useHttpRequest() {
     [method, url, headerRows, body],
   )
 
+  const applyFields = useCallback((f: HttpRequestFields) => {
+    setMethod(f.method)
+    setUrl(f.url)
+    setHeaderRows(
+      f.headers.length > 0
+        ? [
+            ...f.headers.map((h) => ({ name: h.name, value: h.value })),
+            { name: '', value: '' },
+          ]
+        : defaultHeaderRows(),
+    )
+    setBody(f.body)
+    setResult(null)
+  }, [])
+
   const send = useCallback(async () => {
     abortRef.current?.abort()
     const controller = new AbortController()
@@ -49,6 +81,7 @@ export function useHttpRequest() {
         signal: controller.signal,
       })
       setResult(out)
+      onSendCompleteRef.current?.({ fields, result: out })
     } finally {
       setLoading(false)
     }
@@ -94,6 +127,7 @@ export function useHttpRequest() {
     addHeaderRow,
     removeHeaderRow,
     updateHeaderRow,
+    applyFields,
   }
 }
 
