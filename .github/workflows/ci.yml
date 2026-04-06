@@ -7,8 +7,24 @@ on:
     branches: [main]
 
 jobs:
-  web:
+  ci:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://squawk:squawk@localhost:5432/squawk
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: squawk
+          POSTGRES_PASSWORD: squawk
+          POSTGRES_DB: squawk
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U squawk -d squawk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,6 +33,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Apply database migrations
+        run: npm run db:migrate
       - name: Format check
         run: npm run format:check
       - name: Lint

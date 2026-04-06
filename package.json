@@ -4,11 +4,17 @@
   "workspaces": ["apps/*"],
   "scripts": {
     "dev": "npm run dev -w web",
-    "build": "npm run build -w web",
-    "lint": "npm run lint -w web",
-    "test": "npm run test -w web",
+    "dev:web": "npm run dev -w web",
+    "dev:api": "npm run dev -w api",
+    "build": "npm run build -w web && npm run build -w api",
+    "lint": "npm run lint -w web && npm run lint -w api",
+    "test": "npm run test -w web && npm run test -w api",
     "preview": "npm run preview -w web",
-    "format": "npm run format -w web",
-    "format:check": "npm run format:check -w web"
+    "format": "npm run format -w web && npm run format -w api",
+    "format:check": "npm run format:check -w web && npm run format:check -w api",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "db:migrate": "npm run db:migrate -w api",
+    "db:studio": "npm run db:studio -w api"
   }
 }
