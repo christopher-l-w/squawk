@@ -1,6 +1,7 @@
 import type { HttpMethod, HttpRequestFields } from '../lib/http'
 import { HTTP_METHODS } from '../lib/http'
 import type { SavedRequestRow } from '../api/squawkData'
+import { CollapsibleSection } from './CollapsibleSection'
 
 function isHttpMethod(m: string): m is HttpMethod {
   return (HTTP_METHODS as readonly string[]).includes(m)
@@ -28,13 +29,7 @@ export function SavedRequestsPanel({
   }
 
   return (
-    <section
-      className="saved-requests-panel panel"
-      aria-labelledby="saved-requests-heading"
-    >
-      <h2 id="saved-requests-heading" className="panel__title">
-        Saved requests
-      </h2>
+    <CollapsibleSection title="Saved requests" className="saved-requests-panel">
       <p className="saved-requests-intro muted">
         Load a saved request into the editor or remove it from your account.
       </p>
@@ -63,6 +58,6 @@ export function SavedRequestsPanel({
           ))}
         </ul>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

@@ -1,6 +1,7 @@
 import type { HttpMethod, HttpRequestFields } from '../lib/http'
 import { HTTP_METHODS } from '../lib/http'
 import type { HistoryRow } from '../api/squawkData'
+import { CollapsibleSection } from './CollapsibleSection'
 
 function isHttpMethod(m: string): m is HttpMethod {
   return (HTTP_METHODS as readonly string[]).includes(m)
@@ -36,10 +37,7 @@ export function LibraryPanel({ history, onApplyRequest }: LibraryPanelProps) {
   }
 
   return (
-    <section className="library-panel panel" aria-labelledby="library-heading">
-      <h2 id="library-heading" className="panel__title">
-        History
-      </h2>
+    <CollapsibleSection title="History" className="library-panel">
       <p className="library-intro muted">
         Reopen a past request from your account. Send requests to add entries.
       </p>
@@ -64,6 +62,6 @@ export function LibraryPanel({ history, onApplyRequest }: LibraryPanelProps) {
           ))}
         </ul>
       )}
-    </section>
+    </CollapsibleSection>
   )
 }

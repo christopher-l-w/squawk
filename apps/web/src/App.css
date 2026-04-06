@@ -351,6 +351,51 @@
   font-weight: 600;
 }
 
+.collapsible-section.panel .collapsible-section__title {
+  margin-bottom: 0;
+}
+
+.collapsible-section__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.15rem 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 6px;
+}
+
+.collapsible-section__toggle:hover {
+  color: var(--accent);
+}
+
+.collapsible-section__toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.collapsible-section__caret {
+  flex-shrink: 0;
+  width: 1rem;
+  font-size: 0.6rem;
+  line-height: 1;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.collapsible-section__body {
+  margin-top: 0.75rem;
+}
+
 .field-row {
   display: flex;
   gap: 0.5rem;
