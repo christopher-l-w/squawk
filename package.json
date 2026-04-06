@@ -1,0 +1,14 @@
+{
+  "name": "squawk",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "lint": "npm run lint -w web",
+    "test": "npm run test -w web",
+    "preview": "npm run preview -w web",
+    "format": "npm run format -w web",
+    "format:check": "npm run format:check -w web"
+  }
+}
