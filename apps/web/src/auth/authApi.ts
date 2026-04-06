@@ -21,12 +21,11 @@ export async function fetchMe(): Promise<AuthUser | null> {
   if (!base) return null
 
   const res = await fetch(`${base}/auth/me`, { credentials: 'include' })
-  if (res.status === 401) return null
   if (!res.ok) {
     throw new Error(await parseError(res))
   }
-  const data = (await res.json()) as { user: AuthUser }
-  return data.user
+  const data = (await res.json()) as { user: AuthUser | null }
+  return data.user ?? null
 }
 
 export async function registerRequest(

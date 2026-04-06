@@ -10,9 +10,11 @@ describe('createApp', () => {
     expect(body.status).toBe('ok')
   })
 
-  it('GET /v1/auth/me returns 401 without session', async () => {
+  it('GET /v1/auth/me returns 200 with user null without session', async () => {
     const app = createApp()
     const res = await app.request('http://localhost/v1/auth/me')
-    expect(res.status).toBe(401)
+    expect(res.status).toBe(200)
+    const body = (await res.json()) as { user: null }
+    expect(body.user).toBeNull()
   })
 })

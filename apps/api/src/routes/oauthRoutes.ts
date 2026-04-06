@@ -5,18 +5,21 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SEC } from '../auth/constants.js'
 import { createSessionForUser } from '../auth/createSession.js'
 import { findOrCreateUserFromOAuth } from '../auth/oauthUser.js'
+import { primaryWebOrigin } from '../webOrigin.js'
 
 const GOOGLE_STATE = 'squawk_oauth_google_state'
 const GOOGLE_VERIFIER = 'squawk_oauth_google_code_verifier'
 
 const OAUTH_COOKIE_MAX_AGE = 600
 
+/** State/PKCE cookies: in production use SameSite=None + Secure so they survive the Google → API callback after a cross-site redirect (some environments are stricter than Lax-only). */
 function oauthCookieOpts() {
+  const production = process.env.NODE_ENV === 'production'
   return {
     path: '/',
     httpOnly: true,
-    sameSite: 'Lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: (production ? 'None' : 'Lax') as 'None' | 'Lax',
+    secure: production,
     maxAge: OAUTH_COOKIE_MAX_AGE,
   }
 }
@@ -31,16 +34,14 @@ function setSessionCookie(c: Context, token: string) {
   })
 }
 
-function webOrigin(): string {
-  return process.env.WEB_ORIGIN ?? 'http://localhost:5173'
-}
-
 function redirectOAuthError(c: Context, code: string) {
-  return c.redirect(`${webOrigin()}/login?error=${encodeURIComponent(code)}`)
+  return c.redirect(
+    `${primaryWebOrigin()}/login?error=${encodeURIComponent(code)}`,
+  )
 }
 
 function redirectOAuthSuccess(c: Context) {
-  return c.redirect(`${webOrigin()}/`)
+  return c.redirect(`${primaryWebOrigin()}/`)
 }
 
 /** Logs OAuth failures for debugging (terminal / server logs). */
@@ -61,18 +62,17 @@ function logOAuth(route: string, err: unknown): void {
 }
 
 function googleConfigured(): boolean {
-  return Boolean(
-    process.env.GOOGLE_CLIENT_ID &&
-    process.env.GOOGLE_CLIENT_SECRET &&
-    process.env.GOOGLE_REDIRECT_URI,
-  )
+  const id = process.env.GOOGLE_CLIENT_ID?.trim()
+  const secret = process.env.GOOGLE_CLIENT_SECRET?.trim()
+  const redirect = process.env.GOOGLE_REDIRECT_URI?.trim()
+  return Boolean(id && secret && redirect)
 }
 
 function getGoogle() {
   return new arctic.Google(
-    process.env.GOOGLE_CLIENT_ID!,
-    process.env.GOOGLE_CLIENT_SECRET!,
-    process.env.GOOGLE_REDIRECT_URI!,
+    process.env.GOOGLE_CLIENT_ID!.trim(),
+    process.env.GOOGLE_CLIENT_SECRET!.trim(),
+    process.env.GOOGLE_REDIRECT_URI!.trim(),
   )
 }
 
@@ -114,8 +114,9 @@ export function createOAuthRoutes() {
     const state = c.req.query('state')
     const storedState = getCookie(c, GOOGLE_STATE)
     const codeVerifier = getCookie(c, GOOGLE_VERIFIER)
-    deleteCookie(c, GOOGLE_STATE, { path: '/' })
-    deleteCookie(c, GOOGLE_VERIFIER, { path: '/' })
+    const oauthOpts = oauthCookieOpts()
+    deleteCookie(c, GOOGLE_STATE, oauthOpts)
+    deleteCookie(c, GOOGLE_VERIFIER, oauthOpts)
     if (
       !code ||
       !codeVerifier ||

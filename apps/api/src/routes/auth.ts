@@ -166,7 +166,7 @@ export function createAuthRoutes() {
   r.get('/me', async (c) => {
     const user = await getSessionUser(c)
     if (!user) {
-      return c.json({ error: 'Unauthorized' }, 401)
+      return c.json({ user: null })
     }
     return c.json({ user })
   })

@@ -109,9 +109,53 @@ Output is `apps/web/dist/`.
 | `DATABASE_URL` | API | Postgres connection string |
 | `NODE_ENV` | API | Use `production` for secure cookies |
 | `PORT` | API | Listen port (default `3001`) |
-| `WEB_ORIGIN` | API | Exact browser origin allowed by CORS (your deployed SPA URL) |
+| `WEB_ORIGIN` | API | Browser origin allowed by CORS (your deployed SPA URL). Comma-separated list if you enable both apex and `www`; see [Optional `www` subdomain](#optional-www-subdomain) |
 | `VITE_API_URL` | Web **build** | Public API base URL the SPA calls, including **`/v1`** (no trailing slash after `v1`) |
-| `GOOGLE_*` | API | Optional; see below |
+| `GOOGLE_*` | API | Optional; [Sign in with Google](#sign-in-with-google-production) only appears when **all three** are set on the API |
+
+### Sign in with Google (production)
+
+The login page loads **`GET /v1/auth/oauth/providers`** and shows **Sign in with Google** only when the response is `{"google":true}`. The API sets that to `true` only when **all** of these environment variables are non-empty on the API host (e.g. Railway):
+
+| Variable | Notes |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID from [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials** |
+| `GOOGLE_CLIENT_SECRET` | Client secret for the same OAuth client |
+| `GOOGLE_REDIRECT_URI` | Must match **exactly** the callback URL the API serves, e.g. **`https://api.christopherw.ca/v1/auth/oauth/google/callback`** (scheme, host, path, no trailing slash) |
+
+**Google Cloud:** For that OAuth client, add the **same** URL under **Authorized redirect URIs**.
+
+After setting or changing these variables, **redeploy the API** so the process picks them up.
+
+**Sanity check** (should return `{"google":true}` when configured):
+
+```bash
+curl -sS "https://api.christopherw.ca/v1/auth/oauth/providers"
+```
+
+If you see `{"google":false}`, at least one variable is missing, empty, or the deployment is stale.
+
+**Consent screen:** For users outside a test-user list, the OAuth consent screen may need to be **In production**; sensitive scopes can require [Google verification](https://support.google.com/cloud/answer/9110914). See also the [Production reminder](#production-reminder-oauth--google) below.
+
+**If Google sign-in fails after you pick a Google account:** You are redirected back to `/login?error=…`. Common cases:
+
+| `error` | Likely cause |
+| --- | --- |
+| `oauth_state` | The short-lived OAuth cookies did not reach the callback (blocked, wrong domain, or expired). Retry; confirm the API URL is **HTTPS** and matches your Railway custom domain. |
+| `oauth_failed` | Usually **`GOOGLE_REDIRECT_URI`** does not match **Authorized redirect URIs** in Google Cloud **exactly** (copy-paste both; no trailing slash; same host as in the browser). Check API logs for `[oauth]` lines after redeploying. |
+| `oauth_email` / `oauth_profile` | Google did not return email/profile; consent screen or scopes. |
+
+**Repo-only changes are not always enough:** You must align **Railway env**, **Google Cloud redirect URIs**, and **`WEB_ORIGIN`** (first origin for post-login redirect). After changing env vars, **redeploy** the API. Pushing this repo helps when we ship cookie / trimming fixes; they are not a substitute for a mismatched redirect URI in Google Cloud.
+
+### Optional `www` subdomain
+
+Production is set up for **`https://squawk.<your-domain>`** only (no `www.squawk.…`). That matches **`include_www = false`** on `module.squawk_spa` in **[infra-static-site](https://github.com/christopher-l-w/infra-static-site)** (`terraform/sites/christopherw/main.tf`), which keeps ACM, CloudFront, and Route53 simpler.
+
+To **add** `https://www.squawk.<your-domain>` later:
+
+1. **Terraform** — Set **`include_www = true`** on `module.squawk_spa`, run **`terraform apply`**, and wait for the certificate (new SAN + DNS validation) and distribution updates. If you had previously applied with `www`, turning it **off** again removes that hostname from AWS.
+2. **API** — Set **`WEB_ORIGIN`** to a **comma-separated** list, **apex first** if that should stay the canonical URL for OAuth redirects, e.g. `https://squawk.example.com,https://www.squawk.example.com`. The API already parses this ([`apps/api/src/webOrigin.ts`](apps/api/src/webOrigin.ts)).
+3. **Redeploy** the API so the new `WEB_ORIGIN` is live.
 
 ## Project layout
 
@@ -139,11 +183,10 @@ The HTTP client UI still sends `fetch` to **whatever URL you type**; it does not
 
 ### Production reminder (OAuth / Google)
 
-Before pointing real users at a deployed Squawk:
+Before pointing real users at a deployed Squawk, configure **`GOOGLE_*`** as in [Sign in with Google (production)](#sign-in-with-google-production). Additionally:
 
-1. **Google Cloud OAuth client** — Add your **production** redirect URI under **`/v1`**, e.g. `https://api.yourdomain.com/v1/auth/oauth/google/callback`, and set **`GOOGLE_REDIRECT_URI`** in the API environment to that exact URL. Use **HTTPS** for the live API; align **`WEB_ORIGIN`** and **`VITE_API_URL`** (including `/v1`) with your real web and API URLs.
-2. **OAuth consent screen** — In [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **OAuth consent screen**, move from **Testing** to **In production** when you are ready for users outside any test-user list.
-3. **Verification** — If your app uses restricted or sensitive scopes, or you need broad public sign-in, Google may require **[app verification](https://support.google.com/cloud/answer/9110914)** (privacy policy, branding, review). Plan time for that before launch; internal/testing-only usage can stay in **Testing** with explicit test users.
+1. **OAuth consent screen** — In [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **OAuth consent screen**, move from **Testing** to **In production** when you are ready for users outside any test-user list.
+2. **Verification** — If your app uses restricted or sensitive scopes, or you need broad public sign-in, Google may require **[app verification](https://support.google.com/cloud/answer/9110914)** (privacy policy, branding, review). Plan time for that before launch; internal/testing-only usage can stay in **Testing** with explicit test users.
 
 ## Roadmap
 

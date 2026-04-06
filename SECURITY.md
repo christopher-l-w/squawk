@@ -16,6 +16,6 @@ Session cookies, CORS, OAuth, and API hardening for production hosts are documen
 
 ## Frontend
 
-- **Content-Security-Policy** is injected as a `<meta>` tag only in **production** builds (`apps/web/vite.config.ts`); `connect-src` includes `VITE_API_URL` when set. Dev mode omits CSP so Vite’s inline HMR/React preamble is not blocked. For `frame-ancestors`, set **HTTP response headers** on your CDN or origin (browsers ignore `frame-ancestors` in `<meta>`).
+- **Content-Security-Policy** is injected as a `<meta>` tag only in **production** builds (`apps/web/vite.config.ts`). **`connect-src`** allows `https:` and `http:` so the HTTP client can send requests to user-entered URLs (same role as curl). The API origin from `VITE_API_URL` is also included when set. Dev mode omits CSP so Vite’s inline HMR/React preamble is not blocked. For `frame-ancestors`, set **HTTP response headers** on your CDN or origin (browsers ignore `frame-ancestors` in `<meta>`).
 - **XSS:** No `dangerouslySetInnerHTML` in the app; React’s default escaping is used. Re-audit if rich HTML or markdown is added later.
 - **Dependencies:** Run `npm audit` in CI; keep lockfiles committed and apply security updates regularly.

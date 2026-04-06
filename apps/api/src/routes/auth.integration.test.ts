@@ -42,7 +42,9 @@ describeAuth('auth HTTP routes', () => {
     const after = await app.request('http://localhost/v1/auth/me', {
       headers: { Cookie: cookieHeader },
     })
-    expect(after.status).toBe(401)
+    expect(after.status).toBe(200)
+    const afterBody = (await after.json()) as { user: null }
+    expect(afterBody.user).toBeNull()
   })
 
   it('PATCH /auth/me updates display name; DELETE /auth/me removes user', async () => {
@@ -80,7 +82,9 @@ describeAuth('auth HTTP routes', () => {
     const gone = await app.request('http://localhost/v1/auth/me', {
       headers: { Cookie: cookieHeader },
     })
-    expect(gone.status).toBe(401)
+    expect(gone.status).toBe(200)
+    const goneBody = (await gone.json()) as { user: null }
+    expect(goneBody.user).toBeNull()
   })
 
   it('login with existing user', async () => {

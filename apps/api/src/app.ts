@@ -5,8 +5,7 @@ import { createAuthRoutes } from './routes/auth.js'
 import { createHistoryRoutes } from './routes/historyRoutes.js'
 import { createOAuthRoutes } from './routes/oauthRoutes.js'
 import { createSavedRequestsRoutes } from './routes/savedRequests.js'
-
-const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:5173'
+import { corsOriginOption } from './webOrigin.js'
 
 export function createApp() {
   const app = new Hono()
@@ -14,7 +13,7 @@ export function createApp() {
   app.use(
     '/*',
     cors({
-      origin: webOrigin,
+      origin: corsOriginOption(),
       allowHeaders: ['Content-Type', 'Cookie'],
       exposeHeaders: ['Set-Cookie'],
       credentials: true,

@@ -14,7 +14,9 @@ export default defineConfig(({ mode }) => {
     }
   })()
 
-  const connectParts = ["'self'"]
+  // Squawk sends arbitrary user-entered URLs (like curl). Allow https/http targets;
+  // keep API origin explicit when VITE_API_URL is set (covers odd parsing edge cases).
+  const connectParts = ["'self'", 'https:', 'http:']
   if (apiOrigin) connectParts.push(apiOrigin)
 
   // CSP via <meta> only in production builds. In dev, Vite injects inline scripts
