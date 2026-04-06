@@ -6,7 +6,11 @@ import { sessions, users } from '../db/schema.js'
 import { SESSION_COOKIE_NAME } from './constants.js'
 import { hashSessionToken } from './token.js'
 
-export type AuthUser = { id: string; email: string }
+export type AuthUser = {
+  id: string
+  email: string
+  displayName: string | null
+}
 
 /**
  * Resolves the current user from the session cookie, or null if missing/invalid/expired.
@@ -22,6 +26,7 @@ export async function getSessionUser(c: Context): Promise<AuthUser | null> {
     .select({
       id: users.id,
       email: users.email,
+      displayName: users.displayName,
     })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
@@ -36,5 +41,9 @@ export async function getSessionUser(c: Context): Promise<AuthUser | null> {
   const row = rows[0]
   if (!row) return null
 
-  return { id: row.id, email: row.email }
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.displayName ?? null,
+  }
 }

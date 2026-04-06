@@ -1,10 +1,25 @@
-import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { getApiBaseUrl } from '../auth/config'
 import { useAuth } from '../auth/useAuth'
 import '../App.css'
 
+function oauthErrorMessage(code: string | null): string | null {
+  if (!code) return null
+  const map: Record<string, string> = {
+    oauth_state: 'That sign-in link expired or was invalid. Please try again.',
+    oauth_failed: 'Sign-in with the provider failed. Please try again.',
+    oauth_not_configured:
+      'That sign-in method is not available on this server.',
+    oauth_profile: 'Could not load your profile from the provider.',
+    oauth_email: 'Could not read your email from the provider.',
+  }
+  return map[code] ?? 'Sign-in failed. Please try again.'
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const {
     user,
     loading,
@@ -19,6 +34,31 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [oauthProviders, setOauthProviders] = useState<{
+    google: boolean
+  } | null>(null)
+
+  const urlError = useMemo(
+    () => oauthErrorMessage(searchParams.get('error')),
+    [searchParams],
+  )
+
+  useEffect(() => {
+    const base = getApiBaseUrl()
+    if (!base) return
+    void fetch(`${base}/auth/oauth/providers`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && typeof data === 'object' && 'google' in data) {
+          setOauthProviders({
+            google: Boolean((data as { google?: boolean }).google),
+          })
+        } else {
+          setOauthProviders({ google: false })
+        }
+      })
+      .catch(() => setOauthProviders({ google: false }))
+  }, [])
 
   if (!configured) {
     return (
@@ -47,7 +87,9 @@ export function LoginPage() {
     return <Navigate to="/" replace />
   }
 
-  const displayError = submitError ?? sessionError
+  const displayError = submitError ?? sessionError ?? urlError
+  const base = getApiBaseUrl()
+  const showOauth = oauthProviders && base && oauthProviders.google
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -84,6 +126,23 @@ export function LoginPage() {
         <p className="login-page__subtitle muted">
           Sign in to sync saved requests and history.
         </p>
+        {showOauth ? (
+          <div className="login-oauth" aria-label="Social sign-in">
+            {oauthProviders.google ? (
+              <a
+                className="btn login-oauth-google"
+                href={`${base}/auth/oauth/google`}
+              >
+                Continue with Google
+              </a>
+            ) : null}
+          </div>
+        ) : null}
+        {showOauth ? (
+          <p className="login-oauth-divider" role="presentation">
+            <span>or</span>
+          </p>
+        ) : null}
         <form
           className="login-page__form auth-panel login-page__auth"
           onSubmit={onSubmit}

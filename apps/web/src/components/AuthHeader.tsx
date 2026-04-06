@@ -19,10 +19,14 @@ export function AuthHeader() {
   }
 
   if (user) {
+    const label =
+      user.displayName?.trim() && user.displayName.trim().length > 0
+        ? user.displayName.trim()
+        : user.email
     return (
       <div className="auth-bar">
         <span className="auth-email" title={user.email}>
-          {user.email}
+          {label}
         </span>
         <button
           type="button"

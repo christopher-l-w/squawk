@@ -13,7 +13,21 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(null, { status: 401 })),
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url =
+          typeof input === 'string'
+            ? input
+            : input instanceof Request
+              ? input.url
+              : input.href
+        if (url.includes('/auth/oauth/providers')) {
+          return new Response(JSON.stringify({ google: false }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+        return new Response(null, { status: 401 })
+      }),
     )
   })
 

@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
@@ -16,6 +17,8 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }),
+  /** Shown in the UI when set (e.g. Google "name"); falls back to email. */
+  displayName: varchar('display_name', { length: 255 }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -33,6 +36,28 @@ export const sessions = pgTable('sessions', {
     .defaultNow()
     .notNull(),
 })
+
+/** Links a user to an OAuth provider (e.g. Google `sub`). */
+export const oauthAccounts = pgTable(
+  'oauth_accounts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    provider: varchar('provider', { length: 32 }).notNull(),
+    providerSubject: text('provider_subject').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex('oauth_accounts_provider_subject_unique').on(
+      t.provider,
+      t.providerSubject,
+    ),
+  ],
+)
 
 export const savedRequests = pgTable('saved_requests', {
   id: uuid('id').primaryKey().defaultRandom(),

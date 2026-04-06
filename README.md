@@ -1,6 +1,6 @@
 # squawk
 
-Browser-based HTTP client (“curl with a UI”) plus a **TypeScript API**, **PostgreSQL**, and **email/password authentication** (session cookies).
+Browser-based HTTP client (“curl with a UI”) plus a **TypeScript API**, **PostgreSQL**, and authentication (**email/password** and optional **Sign in with Google**, session cookies).
 
 ## Requirements
 
@@ -20,6 +20,8 @@ npm run db:migrate
 The default `DATABASE_URL` in `.env.example` matches the Compose service (`squawk` / `squawk` / database `squawk` on port `5432`).
 
 **Auth + CORS:** Keep `WEB_ORIGIN` in the root `.env` aligned with the Vite dev origin (`http://localhost:5173`). Set `VITE_API_URL` in `apps/web/.env` to your API base URL (e.g. `http://localhost:3001`).
+
+**OAuth (optional):** Uncomment and set `GOOGLE_*` in the root `.env` (see [`.env.example`](.env.example)) and register the redirect URI in Google Cloud. Run `npm run db:migrate` so the `oauth_accounts` table exists.
 
 Run the UI and API in two terminals:
 
@@ -58,12 +60,22 @@ The web app is a SPA with client-side routing: **`/`** is the HTTP client, **`/l
 - `GET /health` — process liveness
 - `GET /ready` — readiness; returns **503** if `DATABASE_URL` is missing or the DB is unreachable
 - `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` — session cookie auth (`squawk_session` httpOnly cookie)
+- `GET /auth/oauth/providers` — JSON `{ google: boolean }` (whether Google OAuth env vars are set)
+- `GET /auth/oauth/google` → Google consent, then `GET /auth/oauth/google/callback` — Sign in with Google
 - `GET /saved-requests`, `POST /saved-requests`, `PATCH /saved-requests/:id`, `DELETE /saved-requests/:id` — named saved HTTP requests (requires session)
 - `GET /history?limit=…`, `POST /history` — append and list recent request snapshots for the signed-in user (requires session)
 
-After pulling schema changes, run `npm run db:migrate` so new columns (e.g. request snapshot fields on `request_history`) exist.
+After pulling schema changes, run `npm run db:migrate` (e.g. `request_history` snapshot columns, `oauth_accounts` for social login).
 
 The HTTP client UI still sends `fetch` to **whatever URL you type**; it does not proxy through the API. Third-party APIs may still hit **CORS** limits until a same-origin proxy exists.
+
+### Production reminder (OAuth / Google)
+
+Before pointing real users at a deployed Squawk:
+
+1. **Google Cloud OAuth client** — Add your **production** API base URL to **Authorized redirect URIs**, e.g. `https://api.yourdomain.com/auth/oauth/google/callback`, and set **`GOOGLE_REDIRECT_URI`** in the root `.env` to that exact URL. Use **HTTPS** for the live API; update **`WEB_ORIGIN`** and **`VITE_API_URL`** to your real web and API URLs.
+2. **OAuth consent screen** — In [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **OAuth consent screen**, move from **Testing** to **In production** when you are ready for users outside any test-user list.
+3. **Verification** — If your app uses restricted or sensitive scopes, or you need broad public sign-in, Google may require **[app verification](https://support.google.com/cloud/answer/9110914)** (privacy policy, branding, review). Plan time for that before launch; internal/testing-only usage can stay in **Testing** with explicit test users.
 
 ## Roadmap
 

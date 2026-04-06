@@ -1,6 +1,11 @@
 import { getApiBaseUrl } from './config'
 
-export type AuthUser = { id: string; email: string }
+export type AuthUser = {
+  id: string
+  email: string
+  /** From OAuth (e.g. Google); UI may show this instead of email. */
+  displayName: string | null
+}
 
 async function parseError(res: Response): Promise<string> {
   try {

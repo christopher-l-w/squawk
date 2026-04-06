@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { checkDatabase } from './db/health.js'
 import { createAuthRoutes } from './routes/auth.js'
 import { createHistoryRoutes } from './routes/historyRoutes.js'
+import { createOAuthRoutes } from './routes/oauthRoutes.js'
 import { createSavedRequestsRoutes } from './routes/savedRequests.js'
 
 const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:5173'
@@ -31,6 +32,7 @@ export function createApp() {
   })
 
   app.route('/auth', createAuthRoutes())
+  app.route('/auth/oauth', createOAuthRoutes())
   app.route('/saved-requests', createSavedRequestsRoutes())
   app.route('/history', createHistoryRoutes())
 

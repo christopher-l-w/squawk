@@ -76,7 +76,11 @@ export function createAuthRoutes() {
           email: normalizedEmail,
           passwordHash,
         })
-        .returning({ id: users.id, email: users.email })
+        .returning({
+          id: users.id,
+          email: users.email,
+          displayName: users.displayName,
+        })
 
       const row = inserted[0]
       if (!row) {
@@ -86,7 +90,16 @@ export function createAuthRoutes() {
       const token = await createSessionForUser(row.id)
       setSessionCookie(c, token)
 
-      return c.json({ user: { id: row.id, email: row.email } }, 201)
+      return c.json(
+        {
+          user: {
+            id: row.id,
+            email: row.email,
+            displayName: row.displayName ?? null,
+          },
+        },
+        201,
+      )
     } catch (err: unknown) {
       if (
         err &&
@@ -126,7 +139,13 @@ export function createAuthRoutes() {
     const token = await createSessionForUser(user.id)
     setSessionCookie(c, token)
 
-    return c.json({ user: { id: user.id, email: user.email } })
+    return c.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName ?? null,
+      },
+    })
   })
 
   r.post('/logout', async (c) => {
