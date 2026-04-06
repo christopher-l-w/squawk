@@ -15,6 +15,7 @@
     "format:check": "npm run format:check -w web && npm run format:check -w api",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
+    "docker:build-api": "docker build -t squawk-api .",
     "db:migrate": "npm run db:migrate -w api",
     "db:studio": "npm run db:studio -w api",
     "prepare": "husky"

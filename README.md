@@ -44,8 +44,57 @@ The web app is a SPA with client-side routing: **`/`** is the HTTP client, **`/l
 | `npm run format` / `npm run format:check` | Prettier |
 | `npm run docker:up` | Start Postgres (`docker compose up -d`) |
 | `npm run docker:down` | Stop Compose services |
+| `npm run docker:build-api` | Build production API Docker image ([`Dockerfile`](Dockerfile)) |
 | `npm run db:migrate` | Apply Drizzle SQL migrations to `DATABASE_URL` |
 | `npm run db:studio` | [Drizzle Studio](https://orm.drizzle.team/docs/drizzle-kit-studio) (inspect DB) |
+
+## Deploy
+
+Squawk is two pieces: the **API** (Node, e.g. Docker or any Node 22 host) and the **static web app** (Vite build). Use **HTTPS** in production. Prefer **same registrable domain** for web + API (e.g. `www` + `api` subdomains) or a **single origin** with a reverse proxy so session cookies and CORS match [`WEB_ORIGIN`](.env.example) (see [`SECURITY.md`](SECURITY.md)).
+
+### 1. Database (e.g. Neon)
+
+Create a Postgres instance and set `DATABASE_URL` (Neon’s URI usually includes `?sslmode=require`). **Before** the API serves traffic, apply migrations from your machine or CI (same repo, same `DATABASE_URL`):
+
+```bash
+DATABASE_URL="postgresql://…" npm run db:migrate
+```
+
+### 2. API (Docker)
+
+A multi-stage [`Dockerfile`](Dockerfile) at the repo root builds only the API:
+
+```bash
+docker build -t squawk-api .
+docker run --rm -p 3001:3001 \
+  -e NODE_ENV=production \
+  -e DATABASE_URL="postgresql://…" \
+  -e WEB_ORIGIN="https://your-web-origin.example" \
+  squawk-api
+```
+
+Set `PORT` if the platform injects one. Optional Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (must match your API’s public URL and Google Cloud redirect URIs).
+
+Check `GET /health` (liveness) and `GET /ready` (returns **503** if the DB is unreachable).
+
+### 3. Web (static hosting)
+
+`VITE_API_URL` is **baked in at build time**. Set it in CI or locally to your **public API base URL** (no trailing slash), then build:
+
+```bash
+cd apps/web && VITE_API_URL="https://api.yourdomain.com" npm run build
+```
+
+Upload `apps/web/dist` to Netlify, Vercel, S3+CloudFront, etc. Configure the host to **serve `index.html` for unknown paths** (SPA fallback) so `/login` works on refresh.
+
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | API | Postgres connection string |
+| `NODE_ENV` | API | Use `production` for secure cookies |
+| `PORT` | API | Listen port (default `3001`) |
+| `WEB_ORIGIN` | API | Exact browser origin allowed by CORS (your deployed SPA URL) |
+| `VITE_API_URL` | Web **build** | Public API URL the SPA calls |
+| `GOOGLE_*` | API | Optional; see below |
 
 ## Project layout
 
@@ -73,7 +122,7 @@ The HTTP client UI still sends `fetch` to **whatever URL you type**; it does not
 
 Before pointing real users at a deployed Squawk:
 
-1. **Google Cloud OAuth client** — Add your **production** API base URL to **Authorized redirect URIs**, e.g. `https://api.yourdomain.com/auth/oauth/google/callback`, and set **`GOOGLE_REDIRECT_URI`** in the root `.env` to that exact URL. Use **HTTPS** for the live API; update **`WEB_ORIGIN`** and **`VITE_API_URL`** to your real web and API URLs.
+1. **Google Cloud OAuth client** — Add your **production** API base URL to **Authorized redirect URIs**, e.g. `https://api.yourdomain.com/auth/oauth/google/callback`, and set **`GOOGLE_REDIRECT_URI`** in the API environment to that exact URL. Use **HTTPS** for the live API; align **`WEB_ORIGIN`** and **`VITE_API_URL`** with your real web and API URLs.
 2. **OAuth consent screen** — In [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **OAuth consent screen**, move from **Testing** to **In production** when you are ready for users outside any test-user list.
 3. **Verification** — If your app uses restricted or sensitive scopes, or you need broad public sign-in, Google may require **[app verification](https://support.google.com/cloud/answer/9110914)** (privacy policy, branding, review). Plan time for that before launch; internal/testing-only usage can stay in **Testing** with explicit test users.
 

@@ -46,3 +46,9 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+  docker-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API Docker image
+        run: docker build -t squawk-api:ci .
