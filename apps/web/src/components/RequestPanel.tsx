@@ -1,12 +1,19 @@
+import { useState } from 'react'
 import type { HttpRequestController } from '../hooks/useHttpRequest'
 import { HTTP_METHODS, type HttpMethod } from '../lib/http'
 
 interface RequestPanelProps {
   http: HttpRequestController
   onSend: () => void
+  /** When set, show name + Save under the Request title (signed-in users). */
+  onSaveRequest?: (name: string) => Promise<void>
 }
 
-export function RequestPanel({ http, onSend }: RequestPanelProps) {
+export function RequestPanel({
+  http,
+  onSend,
+  onSaveRequest,
+}: RequestPanelProps) {
   const {
     method,
     setMethod,
@@ -22,11 +29,53 @@ export function RequestPanel({ http, onSend }: RequestPanelProps) {
     cancel,
   } = http
 
+  const [saveName, setSaveName] = useState('')
+  const [saveBusy, setSaveBusy] = useState(false)
+
+  const handleSave = () => {
+    if (!onSaveRequest) return
+    const name = saveName.trim()
+    if (!name) return
+    void (async () => {
+      setSaveBusy(true)
+      try {
+        await onSaveRequest(name)
+        setSaveName('')
+      } finally {
+        setSaveBusy(false)
+      }
+    })()
+  }
+
   return (
     <section className="panel request-panel" aria-labelledby="request-heading">
       <h2 id="request-heading" className="panel__title">
         Request
       </h2>
+
+      {onSaveRequest ? (
+        <div className="request-save-row">
+          <label htmlFor="save-request-name" className="sr-only">
+            Name this request
+          </label>
+          <input
+            id="save-request-name"
+            className="input request-save-name"
+            placeholder="Name this request"
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            maxLength={255}
+          />
+          <button
+            type="button"
+            className="btn btn--primary"
+            disabled={saveBusy || !saveName.trim()}
+            onClick={handleSave}
+          >
+            Save
+          </button>
+        </div>
+      ) : null}
 
       <div className="field-row">
         <label htmlFor="http-method" className="sr-only">

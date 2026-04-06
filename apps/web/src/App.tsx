@@ -12,6 +12,7 @@ import { useAuth } from './auth/useAuth'
 import { AuthHeader } from './components/AuthHeader'
 import { LibraryPanel } from './components/LibraryPanel'
 import { RequestPanel } from './components/RequestPanel'
+import { SavedRequestsPanel } from './components/SavedRequestsPanel'
 import { ResponsePanel } from './components/ResponsePanel'
 import { useHttpRequest } from './hooks/useHttpRequest'
 import { requestFieldsToCurl } from './lib/http'
@@ -126,16 +127,21 @@ export default function App() {
         </p>
       ) : null}
       {user ? (
-        <LibraryPanel
-          saved={saved}
-          history={history}
-          onApplyRequest={http.applyFields}
-          onSave={handleSave}
-          onDeleteSaved={handleDeleteSaved}
-        />
+        <>
+          <LibraryPanel history={history} onApplyRequest={http.applyFields} />
+          <SavedRequestsPanel
+            items={saved}
+            onApplyRequest={http.applyFields}
+            onDeleteSaved={handleDeleteSaved}
+          />
+        </>
       ) : null}
       <main className="app__main">
-        <RequestPanel http={http} onSend={handleSend} />
+        <RequestPanel
+          http={http}
+          onSend={handleSend}
+          onSaveRequest={user ? handleSave : undefined}
+        />
         <ResponsePanel result={http.result} />
       </main>
     </div>
