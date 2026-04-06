@@ -8,6 +8,7 @@
     "dev:web": "npm run dev -w web",
     "dev:api": "npm run dev -w api",
     "build": "npm run build -w web && npm run build -w api",
+    "build:web": "npm run build -w web",
     "lint": "npm run lint -w web && npm run lint -w api",
     "test": "npm run test -w web && npm run test -w api",
     "preview": "npm run preview -w web",

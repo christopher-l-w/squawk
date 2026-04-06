@@ -1,0 +1,55 @@
+# Deploy Squawk Vite SPA to S3 + CloudFront (same OIDC pattern as christopherw).
+# Infra: infra-static-site/terraform/sites/christopherw (squawk_spa module + deploy IAM role).
+#
+# GitHub (squawk repo): secret AWS_DEPLOY_ROLE_ARN (same ARN as christopherw — role trusts both repos)
+# Variables: AWS_S3_BUCKET, AWS_CLOUDFRONT_DISTRIBUTION_ID, VITE_API_URL (from terraform output after apply)
+
+name: Deploy web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web (production)
+        run: npm run build -w web
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync apps/web/dist "s3://${{ vars.AWS_S3_BUCKET }}/" --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"

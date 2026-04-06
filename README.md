@@ -39,6 +39,7 @@ The web app is a SPA with client-side routing: **`/`** is the HTTP client, **`/l
 | `npm run dev:web` | Vite dev server (`apps/web`) |
 | `npm run dev:api` | API dev server (`apps/api`, default port **3001**) |
 | `npm run build` | Production build: web + API |
+| `npm run build:web` | Production build: web only ([`apps/web`](apps/web)) |
 | `npm test` | Vitest: web + API |
 | `npm run lint` | ESLint: web + API |
 | `npm run format` / `npm run format:check` | Prettier |
@@ -79,13 +80,29 @@ Check `GET /health` (liveness) and `GET /ready` (returns **503** if the DB is un
 
 ### 3. Web (static hosting)
 
-`VITE_API_URL` is **baked in at build time**. Set it in CI or locally to your **public API base URL** (no trailing slash), then build:
+**Terraform and AWS resources for the Squawk UI** (S3, CloudFront, Route53 for `squawk.<domain>`, IAM deploy role) live in **[infra-static-site](https://github.com/christopher-l-w/infra-static-site)** under `terraform/sites/christopherw/` — not in this repo. The **[christopherw](https://github.com/christopher-l-w/christopherw)** repo’s [INFRA.md](https://github.com/christopher-l-w/christopherw/blob/main/INFRA.md) describes the same **GitHub Actions OIDC → S3 + CloudFront invalidation** pattern this app uses.
+
+After `terraform apply` in `infra-static-site` for the `squawk_spa` module, set the API **`WEB_ORIGIN`** on Railway to your deployed SPA origin (e.g. **`https://squawk.christopherw.ca`**) so CORS and cookies match.
+
+**Production build locally**
 
 ```bash
-cd apps/web && VITE_API_URL="https://api.yourdomain.com/v1" npm run build
+cp apps/web/.env.production.example apps/web/.env.production
+# Edit VITE_API_URL if needed, then:
+npm run build:web
 ```
 
-Upload `apps/web/dist` to Netlify, Vercel, S3+CloudFront, etc. Configure the host to **serve `index.html` for unknown paths** (SPA fallback) so `/login` works on refresh.
+Output is `apps/web/dist/`.
+
+**GitHub Actions deploy** ([`.github/workflows/deploy-web.yml`](.github/workflows/deploy-web.yml)) runs on push to `main` when `apps/web/**` changes. Configure the **squawk** repository (same idea as christopherw):
+
+| | |
+| --- | --- |
+| **Secret** | `AWS_DEPLOY_ROLE_ARN` — IAM role ARN from Terraform output `deploy_role_arn` (same role as the landing site; it trusts both repos). |
+| **Variables** | `AWS_S3_BUCKET`, `AWS_CLOUDFRONT_DISTRIBUTION_ID` — use `squawk_spa_s3_bucket_id` and `squawk_spa_cloudfront_distribution_id` from Terraform outputs. |
+| **Variables** | `VITE_API_URL` — e.g. `https://api.christopherw.ca/v1` |
+
+**Other hosts (Netlify, Vercel, etc.)** — Build with `npm run build:web`, set `VITE_API_URL`, and enable SPA fallback to `index.html`.
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
