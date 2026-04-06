@@ -1,8 +1,22 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { checkDatabase } from './db/health.js'
+import { createAuthRoutes } from './routes/auth.js'
+
+const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:5173'
 
 export function createApp() {
   const app = new Hono()
+
+  app.use(
+    '/*',
+    cors({
+      origin: webOrigin,
+      allowHeaders: ['Content-Type', 'Cookie'],
+      exposeHeaders: ['Set-Cookie'],
+      credentials: true,
+    }),
+  )
 
   app.get('/health', (c) => c.json({ status: 'ok' }))
 
@@ -13,6 +27,8 @@ export function createApp() {
     }
     return c.json({ status: 'ready', database: 'up' })
   })
+
+  app.route('/auth', createAuthRoutes())
 
   return app
 }

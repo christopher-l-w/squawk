@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AuthPanel } from './components/AuthPanel'
 import { RequestPanel } from './components/RequestPanel'
 import { ResponsePanel } from './components/ResponsePanel'
 import { useHttpRequest } from './hooks/useHttpRequest'
@@ -33,6 +34,7 @@ export default function App() {
           <p className="app__tagline">HTTP from the browser</p>
         </div>
         <div className="app__header-actions">
+          <AuthPanel />
           <button
             type="button"
             className="btn btn--ghost"

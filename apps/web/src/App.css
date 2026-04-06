@@ -33,7 +33,85 @@
 
 .app__header-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.auth-panel {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
+  min-width: min(100%, 18rem);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.auth-tab {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.auth-tab.is-active {
+  color: var(--text);
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.auth-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.auth-input {
+  flex: 1 1 7rem;
+  min-width: 0;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.auth-submit {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.auth-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--error-text);
+}
+
+.auth-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  max-width: 12rem;
+  text-align: right;
+}
+
+.auth-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-email {
+  font-size: 0.9rem;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .copy-hint {

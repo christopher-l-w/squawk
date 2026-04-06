@@ -21,6 +21,19 @@ export const users = pgTable('users', {
     .notNull(),
 })
 
+/** Opaque session tokens are hashed (SHA-256 hex) and stored here; raw token lives only in httpOnly cookie. */
+export const sessions = pgTable('sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+})
+
 export const savedRequests = pgTable('saved_requests', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')

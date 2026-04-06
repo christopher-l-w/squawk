@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://squawk:squawk@localhost:5432/squawk
+      WEB_ORIGIN: http://localhost:5173
     services:
       postgres:
         image: postgres:16-alpine
