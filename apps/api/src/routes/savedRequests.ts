@@ -86,9 +86,7 @@ export function createSavedRequestsRoutes() {
         ...(p.body !== undefined ? { body: p.body } : {}),
         updatedAt: new Date(),
       })
-      .where(
-        and(eq(savedRequests.id, id), eq(savedRequests.userId, userId)),
-      )
+      .where(and(eq(savedRequests.id, id), eq(savedRequests.userId, userId)))
       .returning()
 
     const row = updated[0]
@@ -105,9 +103,7 @@ export function createSavedRequestsRoutes() {
 
     const deleted = await getDb()
       .delete(savedRequests)
-      .where(
-        and(eq(savedRequests.id, id), eq(savedRequests.userId, userId)),
-      )
+      .where(and(eq(savedRequests.id, id), eq(savedRequests.userId, userId)))
       .returning({ id: savedRequests.id })
 
     if (!deleted.length) return c.json({ error: 'Not found' }, 404)

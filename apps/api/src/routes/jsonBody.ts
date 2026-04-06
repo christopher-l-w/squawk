@@ -4,9 +4,7 @@ import type { z } from 'zod'
 export async function parseJson<T>(
   c: Context,
   schema: z.ZodType<T>,
-): Promise<
-  { ok: true; data: T } | { ok: false; response: Response }
-> {
+): Promise<{ ok: true; data: T } | { ok: false; response: Response }> {
   let body: unknown
   try {
     body = await c.req.json()

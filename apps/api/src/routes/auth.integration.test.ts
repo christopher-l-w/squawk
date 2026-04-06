@@ -112,9 +112,9 @@ describeAuth('auth HTTP routes', () => {
     const listSavedJson = (await listSaved.json()) as {
       items: { id: string }[]
     }
-    expect(
-      listSavedJson.items.some((r) => r.id === createdJson.item.id),
-    ).toBe(true)
+    expect(listSavedJson.items.some((r) => r.id === createdJson.item.id)).toBe(
+      true,
+    )
 
     const histPost = await app.request('http://localhost/history', {
       method: 'POST',
